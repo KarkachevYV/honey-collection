@@ -13,13 +13,9 @@ NUM_FLOWERS = 4
 TRIGGER_DISTANCE = 50  # Расстояние до курсора, при котором пчела перемещается
 
 # Цвета
-FLOWER_COLORS = {
-    'sunflower': (255, 255, 0),  # Ярко-жёлтый
-    'buckwheat': (128, 128, 128),  # Серый
-    'melilot': (255, 255, 255),  # Белый
-    'colza': (255, 255, 204)  # Светло-жёлтый
-}
+GREY = (128, 128, 128)
 WHITE = (255, 255, 255)
+ORANGE = (255, 165, 0)
 
 # Создаем окно
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -61,13 +57,7 @@ visited_flowers = set()
 running = True
 
 while running:
-    # Вычисляем цвет фона на основе посещенных цветков
-    background_color = [128, 128, 128]
-    for flower_type, count in honey_collected.items():
-        color = FLOWER_COLORS[flower_type]
-        background_color = [min(255, background_color[i] + color[i] * count // 5) for i in range(3)]
-    
-    screen.fill(background_color)
+    screen.fill(GREY)
 
     # Обработка событий
     for event in pygame.event.get():
@@ -93,13 +83,29 @@ while running:
         bee_position = (flower_positions[bee_index][0] + FLOWER_SIZE // 2 - BEE_SIZE // 2,
                         flower_positions[bee_index][1] + FLOWER_SIZE // 2 - BEE_SIZE // 2)
 
-    # Отрисовка цветков
-    for pos, flower_type in zip(flower_positions, flower_types):
-        screen.blit(flower_images[flower_type], pos)
+    # Рисуем цветки
+    for flower_pos, flower_type in zip(flower_positions, flower_types):
+        screen.blit(flower_images[flower_type], flower_pos)
 
-    # Отрисовка пчелы
+    # Рисуем пчелу
     screen.blit(bee_image, bee_position)
 
+    # Проверка, собрала ли пчела мед
+    for flower_pos, flower_type in zip(flower_positions, flower_types):
+        if bee_position == (flower_pos[0] + FLOWER_SIZE // 2 - BEE_SIZE // 2,
+                            flower_pos[1] + FLOWER_SIZE // 2 - BEE_SIZE // 2) and (flower_pos, flower_type) not in visited_flowers:
+            honey_collected[flower_type] += 5
+            visited_flowers.add((flower_pos, flower_type))
+
+    # Отображение количества меда
+    font = pygame.font.Font(None, 18)
+    y_offset = 10
+    for flower_type, honey in honey_collected.items():
+        text = font.render(f" Вы с пчелой собрали мёд с '{flower_type}': {honey} mg", True, ORANGE)
+        screen.blit(text, (10, y_offset))
+        y_offset += 30
+
+    # Обновляем дисплей
     pygame.display.flip()
 
 pygame.quit()
